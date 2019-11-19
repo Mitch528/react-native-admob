@@ -2,8 +2,14 @@ import { NativeModules, NativeEventEmitter } from 'react-native';
 
 import { createErrorFromErrorData } from './utils';
 
+type PublisherServerSideVerifiationOptions = {
+  userId: string;
+  customRewardString: string;
+};
+
 type PublisherRewarded = {
   setAdUnitID: (unitId: string) => void;
+  setServerSideVerificationOptions: (options: PublisherServerSideVerifiationOptions) => void;
   requestAd: () => Promise<void>;
   showAd: () => Promise<void>;
 };
@@ -15,12 +21,10 @@ const eventEmitter = new NativeEventEmitter(RNPublisherRewarded);
 const eventMap = {
   adLoaded: 'rewardedVideoAdLoaded',
   adFailedToLoad: 'rewardedVideoAdFailedToLoad',
+  adFailedToShow: 'rewardedVideoAdFailedToShow',
   adOpened: 'rewardedVideoAdOpened',
   adClosed: 'rewardedVideoAdClosed',
-  adLeftApplication: 'rewardedVideoAdLeftApplication',
-  rewarded: 'rewardedVideoAdRewarded',
-  videoStarted: 'rewardedVideoAdVideoStarted',
-  videoCompleted: 'rewardedVideoAdVideoCompleted',
+  rewarded: 'rewardedVideoAdRewarded'
 };
 
 type EventHandler = (evt) => void;

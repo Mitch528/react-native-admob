@@ -2,6 +2,18 @@ import { NativeModules, NativeEventEmitter } from 'react-native';
 
 import { createErrorFromErrorData } from './utils';
 
+type AdMobServerSideVerifiationOptions = {
+  userId: string;
+  customRewardString: string;
+};
+
+type AdMobRewarded = {
+  setAdUnitID: (unitId: string) => void;
+  setServerSideVerificationOptions: (options: AdMobServerSideVerifiationOptions) => void;
+  requestAd: () => Promise<void>;
+  showAd: () => Promise<void>;
+};
+
 const RNAdMobRewarded = NativeModules.RNAdMobRewarded;
 
 const eventEmitter = new NativeEventEmitter(RNAdMobRewarded);
@@ -9,12 +21,10 @@ const eventEmitter = new NativeEventEmitter(RNAdMobRewarded);
 const eventMap = {
   adLoaded: 'rewardedVideoAdLoaded',
   adFailedToLoad: 'rewardedVideoAdFailedToLoad',
+  adFailedToShow: 'rewardedVideoAdFailedToShow',
   adOpened: 'rewardedVideoAdOpened',
   adClosed: 'rewardedVideoAdClosed',
-  adLeftApplication: 'rewardedVideoAdLeftApplication',
-  rewarded: 'rewardedVideoAdRewarded',
-  videoStarted: 'rewardedVideoAdVideoStarted',
-  videoCompleted: 'rewardedVideoAdVideoCompleted',
+  rewarded: 'rewardedVideoAdRewarded'
 };
 
 const _subscriptions = new Map();
@@ -38,7 +48,7 @@ const addEventListener = (event, handler) => {
     // eslint-disable-next-line no-console
     console.warn(`Trying to subscribe to unknown event: "${event}"`);
     return {
-      remove: () => {},
+      remove: () => { },
     };
   }
 };
@@ -60,7 +70,7 @@ const removeAllListeners = () => {
 };
 
 export default {
-  ...RNAdMobRewarded,
+  ...RNAdMobRewarded as AdMobRewarded,
   addEventListener,
   removeEventListener,
   removeAllListeners,
