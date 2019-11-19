@@ -1,16 +1,38 @@
-import { arrayOf, func, string } from 'prop-types';
-import React, { Component } from 'react';
+import React from 'react';
 import {
   findNodeHandle,
   requireNativeComponent,
   UIManager,
-  ViewPropTypes,
+  View,
+  ViewStyle,
+  ViewProps
 } from 'react-native';
 import { createErrorFromErrorData } from './utils';
 
-class PublisherBanner extends Component {
-  constructor() {
-    super();
+export type AdMobPublisherBannerProps = {
+  adSize: string;
+  adUnitID: string;
+  validAdSizes?: string[];
+  testDevices?: string[];
+  onSizeChange?: ({ width, height }: { width: number, height: number }) => void;
+  onAdLoaded?: () => void;
+  onAdClosed?: () => void;
+  onAdFailedToLoad?: (error: string) => void;
+  onAdLeftApplication?: () => void;
+  onAppEvent?: (evt) => void;
+} & ViewProps;
+
+type AdMobPublisherBannerState = {
+  style: ViewStyle;
+};
+
+class PublisherBanner extends React.Component<AdMobPublisherBannerProps, AdMobPublisherBannerState> {
+  static simulatorId = "SIMUALTOR";
+
+  _bannerView!: View;
+
+  constructor(props) {
+    super(props);
     this.handleSizeChange = this.handleSizeChange.bind(this);
     this.handleAppEvent = this.handleAppEvent.bind(this);
     this.handleAdFailedToLoad = this.handleAdFailedToLoad.bind(this);
@@ -27,7 +49,7 @@ class PublisherBanner extends Component {
     UIManager.dispatchViewManagerCommand(
       findNodeHandle(this._bannerView),
       UIManager.getViewManagerConfig('RNDFPBannerView').Commands.loadBanner,
-      null
+      undefined
     );
   }
 
@@ -62,61 +84,13 @@ class PublisherBanner extends Component {
         onSizeChange={this.handleSizeChange}
         onAdFailedToLoad={this.handleAdFailedToLoad}
         onAppEvent={this.handleAppEvent}
-        ref={(el) => (this._bannerView = el)}
+        ref={(el) => this._bannerView = el}
       />
     );
   }
 }
 
-PublisherBanner.simulatorId = 'SIMULATOR';
-
-PublisherBanner.propTypes = {
-  ...ViewPropTypes,
-
-  /**
-   * DFP iOS library banner size constants
-   * (https://developers.google.com/admob/ios/banner)
-   * banner (320x50, Standard Banner for Phones and Tablets)
-   * largeBanner (320x100, Large Banner for Phones and Tablets)
-   * mediumRectangle (300x250, IAB Medium Rectangle for Phones and Tablets)
-   * fullBanner (468x60, IAB Full-Size Banner for Tablets)
-   * leaderboard (728x90, IAB Leaderboard for Tablets)
-   * smartBannerPortrait (Screen width x 32|50|90, Smart Banner for Phones and Tablets)
-   * smartBannerLandscape (Screen width x 32|50|90, Smart Banner for Phones and Tablets)
-   *
-   * banner is default
-   */
-  adSize: string,
-
-  /**
-   * Optional array specifying all valid sizes that are appropriate for this slot.
-   */
-  validAdSizes: arrayOf(string),
-
-  /**
-   * DFP ad unit ID
-   */
-  adUnitID: string,
-
-  /**
-   * Array of test devices. Use PublisherBanner.simulatorId for the simulator
-   */
-  testDevices: arrayOf(string),
-
-  onSizeChange: func,
-
-  /**
-   * DFP library events
-   */
-  onAdLoaded: func,
-  onAdFailedToLoad: func,
-  onAdOpened: func,
-  onAdClosed: func,
-  onAdLeftApplication: func,
-  onAppEvent: func,
-};
-
-const RNDFPBannerView = requireNativeComponent(
+const RNDFPBannerView = (requireNativeComponent as any)(
   'RNDFPBannerView',
   PublisherBanner
 );

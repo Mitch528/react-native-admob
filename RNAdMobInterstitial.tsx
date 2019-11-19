@@ -13,9 +13,14 @@ const eventMap = {
   adLeftApplication: 'interstitialAdLeftApplication',
 };
 
-const _subscriptions = new Map();
+type EventHandler = (evt) => void;
+type EventListener = {
+  remove: () => void;
+};
 
-const addEventListener = (event, handler) => {
+const _subscriptions = new Map<EventHandler, EventListener>();
+
+const addEventListener = (event: string, handler: EventHandler): EventListener => {
   const mappedEvent = eventMap[event];
   if (mappedEvent) {
     let listener;
@@ -34,12 +39,12 @@ const addEventListener = (event, handler) => {
     // eslint-disable-next-line no-console
     console.warn(`Trying to subscribe to unknown event: "${event}"`);
     return {
-      remove: () => {},
+      remove: () => { },
     };
   }
 };
 
-const removeEventListener = (type, handler) => {
+const removeEventListener = (type: string, handler: EventHandler) => {
   const listener = _subscriptions.get(handler);
   if (!listener) {
     return;
