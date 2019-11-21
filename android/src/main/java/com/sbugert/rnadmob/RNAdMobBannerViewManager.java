@@ -1,11 +1,14 @@
 package com.sbugert.rnadmob;
 
 import android.content.Context;
+import android.util.DisplayMetrics;
+import android.view.Display;
 import android.view.View;
 
 import androidx.annotation.Nullable;
 
 import com.facebook.react.bridge.Arguments;
+import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContext;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.bridge.ReadableArray;
@@ -120,9 +123,9 @@ class ReactAdView extends ReactViewGroup {
     private void sendEvent(String name, @Nullable WritableMap event) {
         ReactContext reactContext = (ReactContext) getContext();
         reactContext.getJSModule(RCTEventEmitter.class).receiveEvent(
-                        getId(),
-                        name,
-                        event);
+                getId(),
+                name,
+                event);
     }
 
     public void loadBanner() {
@@ -177,6 +180,12 @@ public class RNAdMobBannerViewManager extends ViewGroupManager<ReactAdView> {
 
     public static final int COMMAND_LOAD_BANNER = 1;
 
+    private ReactApplicationContext mContext;
+
+    public RNAdMobBannerViewManager(ReactApplicationContext context) {
+        mContext = context;
+    }
+
     @Override
     public String getName() {
         return REACT_CLASS;
@@ -198,12 +207,12 @@ public class RNAdMobBannerViewManager extends ViewGroupManager<ReactAdView> {
     public Map<String, Object> getExportedCustomDirectEventTypeConstants() {
         MapBuilder.Builder<String, Object> builder = MapBuilder.builder();
         String[] events = {
-            EVENT_SIZE_CHANGE,
-            EVENT_AD_LOADED,
-            EVENT_AD_FAILED_TO_LOAD,
-            EVENT_AD_OPENED,
-            EVENT_AD_CLOSED,
-            EVENT_AD_LEFT_APPLICATION
+                EVENT_SIZE_CHANGE,
+                EVENT_AD_LOADED,
+                EVENT_AD_FAILED_TO_LOAD,
+                EVENT_AD_OPENED,
+                EVENT_AD_CLOSED,
+                EVENT_AD_LEFT_APPLICATION
         };
         for (int i = 0; i < events.length; i++) {
             builder.put(events[i], MapBuilder.of("registrationName", events[i]));
@@ -224,7 +233,7 @@ public class RNAdMobBannerViewManager extends ViewGroupManager<ReactAdView> {
 
     @ReactProp(name = PROP_TEST_DEVICES)
     public void setPropTestDevices(final ReactAdView view, final ReadableArray testDevices) {
-        ReadableNativeArray nativeArray = (ReadableNativeArray)testDevices;
+        ReadableNativeArray nativeArray = (ReadableNativeArray) testDevices;
         ArrayList<Object> list = nativeArray.toArrayList();
         view.setTestDevices(list.toArray(new String[list.size()]));
     }
@@ -247,9 +256,24 @@ public class RNAdMobBannerViewManager extends ViewGroupManager<ReactAdView> {
                 return AdSize.SMART_BANNER;
             case "smartBanner":
                 return AdSize.SMART_BANNER;
+            case "adaptiveBanner":
+                return getAdaptiveAdSize();
             default:
                 return AdSize.BANNER;
         }
+    }
+
+    private AdSize getAdaptiveAdSize() {
+        Display display = mContext.getCurrentActivity().getWindowManager().getDefaultDisplay();
+        DisplayMetrics outMetrics = new DisplayMetrics();
+        display.getMetrics(outMetrics);
+
+        float widthPixels = outMetrics.widthPixels;
+        float density = outMetrics.density;
+
+        int adWidth = (int) (widthPixels / density);
+
+        return AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(mContext, adWidth);
     }
 
     @Nullable

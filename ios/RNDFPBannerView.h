@@ -10,6 +10,7 @@
 
 @interface RNDFPBannerView : RCTView <GADBannerViewDelegate, GADAdSizeDelegate, GADAppEventDelegate>
 
+@property (nonatomic, copy) NSString *adSize;
 @property (nonatomic, copy) NSArray *validAdSizes;
 @property (nonatomic, copy) NSArray *testDevices;
 
@@ -22,5 +23,7 @@
 @property (nonatomic, copy) RCTBubblingEventBlock onAdLeftApplication;
 
 - (void)loadBanner;
+
+- (GADAdSize)getAdaptiveAdSize:(CGRect)frame;
 
 @end

@@ -47,8 +47,16 @@
 
 - (void)loadBanner
 {
+    GADAdSize adSize = getAdSizeFromString(self.adSize);
+
+    if ([self.adSize isEqualToString:@"adaptiveBanner"]) {
+        UIWindow *keyWindow = [[UIApplication sharedApplication] keyWindow];
+        
+        adSize = [self getAdaptiveAdSize:keyWindow.frame];
+    }
+    
     if(self.onSizeChange) {
-        CGSize size = CGSizeFromGADAdSize(_bannerView.adSize);
+        CGSize size = CGSizeFromGADAdSize(adSize);
         if(!CGSizeEqualToSize(size, self.bounds.size)) {
             self.onSizeChange(@{
                                 @"width": @(size.width),
@@ -56,6 +64,9 @@
                                 });
         }
     }
+
+    _bannerView.adSize = adSize;
+    
     GADRequest *request = [GADRequest request];
     request.testDevices = _testDevices;
     [_bannerView loadRequest:request];
@@ -70,6 +81,17 @@
 {
     [super layoutSubviews];
     _bannerView.frame = self.bounds;
+}
+
+- (GADAdSize)getAdaptiveAdSize:(CGRect)frame
+{
+    if (@available(iOS 11.0, *)) {
+      frame = UIEdgeInsetsInsetRect(frame, self.safeAreaInsets);
+    }
+    
+    CGFloat viewWidth = frame.size.width;
+    
+    return GADCurrentOrientationAnchoredAdaptiveBannerAdSizeWithWidth(viewWidth);
 }
 
 # pragma mark GADBannerViewDelegate

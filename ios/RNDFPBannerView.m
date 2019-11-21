@@ -32,7 +32,7 @@
 
         UIWindow *keyWindow = [[UIApplication sharedApplication] keyWindow];
         UIViewController *rootViewController = [keyWindow rootViewController];
-
+        
         _bannerView = [[DFPBannerView alloc] initWithAdSize:kGADAdSizeBanner];
         _bannerView.delegate = self;
         _bannerView.adSizeDelegate = self;
@@ -53,6 +53,16 @@
 #pragma clang diagnostic pop
 
 - (void)loadBanner {
+    GADAdSize adSize = getAdSizeFromString(self.adSize);
+
+    if ([self.adSize isEqualToString:@"adaptiveBanner"]) {
+        UIWindow *keyWindow = [[UIApplication sharedApplication] keyWindow];
+        
+        adSize = [self getAdaptiveAdSize:keyWindow.frame];
+    }
+
+    _bannerView.adSize = adSize;
+    
     DFPRequest *request = [DFPRequest request];
     request.testDevices = _testDevices;
     [_bannerView loadRequest:request];
@@ -65,7 +75,13 @@
         GADAdSize adSize = [RCTConvert GADAdSize:jsonValue];
         if (GADAdSizeEqualToSize(adSize, kGADAdSizeInvalid)) {
             RCTLogWarn(@"Invalid adSize %@", jsonValue);
-        } else {
+        } else if ([[RCTConvert NSString:jsonValue] isEqualToString:@"adaptiveBanner"]) {
+            UIWindow *keyWindow = [[UIApplication sharedApplication] keyWindow];
+            GADAdSize adSize = [self getAdaptiveAdSize:keyWindow.frame];
+            
+            [validAdSizes addObject:NSValueFromGADAdSize(adSize)];
+        }
+        else {
             [validAdSizes addObject:NSValueFromGADAdSize(adSize)];
         }
     }];
@@ -81,6 +97,17 @@
 {
     [super layoutSubviews];
     _bannerView.frame = self.bounds;
+}
+
+- (GADAdSize)getAdaptiveAdSize:(CGRect)frame
+{
+    if (@available(iOS 11.0, *)) {
+      frame = UIEdgeInsetsInsetRect(frame, self.safeAreaInsets);
+    }
+    
+    CGFloat viewWidth = frame.size.width;
+    
+    return GADCurrentOrientationAnchoredAdaptiveBannerAdSizeWithWidth(viewWidth);
 }
 
 # pragma mark GADBannerViewDelegate
